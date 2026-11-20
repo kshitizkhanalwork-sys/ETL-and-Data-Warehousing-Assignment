@@ -1,0 +1,41 @@
+MERGE INTO DIM_DISTRICT AS target
+USING (
+    SELECT
+        DISTRICT_ID,
+        DISTRICT_NM,
+        REGION_ID,
+        REGION_NM
+    FROM TMP_DISTRICT
+    WHERE DISTRICT_ID IS NOT NULL
+) AS source
+ON target.DISTRICT_ID = source.DISTRICT_ID
+
+WHEN MATCHED
+    AND (
+        NOT EQUAL_NULL(target.DISTRICT_NM, source.DISTRICT_NM)
+        OR NOT EQUAL_NULL(target.REGION_ID, source.REGION_ID)
+        OR NOT EQUAL_NULL(target.REGION_NM, source.REGION_NM)
+    )
+THEN UPDATE SET
+    target.DISTRICT_NM  = source.DISTRICT_NM,
+    target.REGION_ID    = source.REGION_ID,
+    target.REGION_NM    = source.REGION_NM,
+    target.REC_UPDT_TS  = CURRENT_TIMESTAMP()
+
+WHEN NOT MATCHED THEN INSERT (
+    DISTRICT_KY,
+    DISTRICT_ID,
+    DISTRICT_NM,
+    REGION_ID,
+    REGION_NM,
+    REC_INS_TS,
+    REC_UPDT_TS
+) VALUES (
+    district_ky_seq.NEXTVAL,
+    source.DISTRICT_ID,
+    source.DISTRICT_NM,
+    source.REGION_ID,
+    source.REGION_NM,
+    CURRENT_TIMESTAMP(),
+    CURRENT_TIMESTAMP()
+);

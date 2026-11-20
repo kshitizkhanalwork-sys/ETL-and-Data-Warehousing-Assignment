@@ -1,0 +1,65 @@
+UPDATE FCT_INVENTORY
+SET EFF_TO_DT = '2100-12-31'::DATE
+WHERE EFF_TO_DT = DATEADD(day, -1, '{logical_date}'::DATE)
+  AND (ITEM_KY, LOCN_KY) IN (
+      SELECT ITEM_KY, LOCN_KY FROM FCT_INVENTORY
+      WHERE SNAP_DT = '{logical_date}'::DATE
+  );
+
+DELETE FROM FCT_INVENTORY
+WHERE SNAP_DT = '{logical_date}'::DATE;
+
+UPDATE FCT_INVENTORY AS target
+SET target.EFF_TO_DT = DATEADD(day, -1, '{logical_date}'::DATE)
+FROM (
+    SELECT DISTINCT
+        COALESCE(i.ITEM_KY, -1) AS ITEM_KY,
+        COALESCE(l.LOCN_KY, -1) AS LOCN_KY
+    FROM TMP_INVENTORY s
+    LEFT JOIN DIM_ITEM i
+      ON s.ITEM_ID = i.ITEM_ID
+     AND s.SNAP_DT BETWEEN i.EFF_FROM_DT AND i.EFF_TO_DT
+    LEFT JOIN DIM_LOCN l
+      ON s.STORE_ID = l.LOCN_ID
+     AND s.SNAP_DT BETWEEN l.EFF_FROM_DT AND l.EFF_TO_DT
+    WHERE s.SNAP_DT = '{logical_date}'::DATE
+) AS src
+WHERE target.ITEM_KY = src.ITEM_KY
+  AND target.LOCN_KY = src.LOCN_KY
+  AND target.EFF_TO_DT = '2100-12-31'::DATE;
+
+INSERT INTO FCT_INVENTORY (
+    DAY_KY,
+    ITEM_KY,
+    LOCN_KY,
+    SNAP_DT,
+    STOCK_ON_HAND,
+    STOCK_IN_TRANSIT,
+    STOCK_RESERVED,
+    EFF_FROM_DT,
+    EFF_TO_DT,
+    BATCH_ID,
+    REC_INS_TS
+)
+SELECT
+    d.DAY_KY,
+    COALESCE(i.ITEM_KY, -1)                 AS ITEM_KY,
+    COALESCE(l.LOCN_KY, -1)                 AS LOCN_KY,
+    s.SNAP_DT,
+    s.STOCK_ON_HAND,
+    s.STOCK_IN_TRANSIT,
+    s.STOCK_RESERVED,
+    '{logical_date}'::DATE                  AS EFF_FROM_DT,
+    '2100-12-31'::DATE                      AS EFF_TO_DT,
+    '{batch_id}'                            AS BATCH_ID,
+    CURRENT_TIMESTAMP()                     AS REC_INS_TS
+FROM TMP_INVENTORY s
+JOIN DIM_DAY d
+  ON s.SNAP_DT = d.CALENDAR_DT
+LEFT JOIN DIM_ITEM i
+  ON s.ITEM_ID = i.ITEM_ID
+ AND s.SNAP_DT BETWEEN i.EFF_FROM_DT AND i.EFF_TO_DT
+LEFT JOIN DIM_LOCN l
+  ON s.STORE_ID = l.LOCN_ID
+ AND s.SNAP_DT BETWEEN l.EFF_FROM_DT AND l.EFF_TO_DT
+WHERE s.SNAP_DT = '{logical_date}'::DATE;

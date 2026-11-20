@@ -1,0 +1,6 @@
+ITEM_ID,ITEM_DESC,SUBCLASS_ID,SUBCLASS_NM,CLASS_ID,CLASS_NM,DEPT_ID,DEPT_NM,UNIT_COST,UNIT_RETAIL
+ITEM001,Blue Denim Jeans 32x30,SC001,Denim Bottoms,CL001,Bottoms,DEPT01,Mens Apparel,12.50,24.99
+ITEM002,White Cotton T-Shirt M,SC002,Basic Tops,CL002,Tops,DEPT01,Mens Apparel,5.00,19.99
+ITEM003,Running Shoes Size 10,SC003,Athletic Footwear,CL003,Footwear,DEPT02,Footwear,25.00,89.99
+ITEM004,Leather Belt Brown,SC004,Accessories,CL004,Accessories,DEPT01,Mens Apparel,8.00,24.99
+ITEM005,Black Chino Pants 34x32,SC001,Denim Bottoms,CL001,Bottoms,DEPT01,Mens Apparel,15.00,49.99

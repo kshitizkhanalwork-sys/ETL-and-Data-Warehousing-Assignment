@@ -1,0 +1,55 @@
+TRUNCATE TABLE TMP_ITEM;
+
+INSERT INTO TMP_ITEM (
+    ITEM_ID,
+    ITEM_DESC,
+    SUBCLASS_ID,
+    SUBCLASS_NM,
+    CLASS_ID,
+    CLASS_NM,
+    DEPT_ID,
+    DEPT_NM,
+    UNIT_COST,
+    UNIT_RETAIL,
+    SRC_FILE_NM,
+    INGEST_DT
+)
+SELECT
+    TRIM(NULLIF(ITEM_ID,      ''))                      AS ITEM_ID,
+    TRIM(NULLIF(ITEM_DESC,    ''))                      AS ITEM_DESC,
+    TRIM(NULLIF(SUBCLASS_ID,  ''))                      AS SUBCLASS_ID,
+    TRIM(NULLIF(SUBCLASS_NM,  ''))                      AS SUBCLASS_NM,
+    TRIM(NULLIF(CLASS_ID,     ''))                      AS CLASS_ID,
+    TRIM(NULLIF(CLASS_NM,     ''))                      AS CLASS_NM,
+    TRIM(NULLIF(DEPT_ID,      ''))                      AS DEPT_ID,
+    TRIM(NULLIF(DEPT_NM,      ''))                      AS DEPT_NM,
+    TRY_TO_NUMBER(TRIM(UNIT_COST),   18, 4)             AS UNIT_COST,
+    TRY_TO_NUMBER(TRIM(UNIT_RETAIL), 18, 4)             AS UNIT_RETAIL,
+    SRC_FILE_NM,
+    INGEST_DT
+FROM STG_ITEM_MASTER
+WHERE INGEST_DT = '{logical_date}'::DATE
+
+  AND NULLIF(TRIM(ITEM_ID), '') IS NOT NULL;
+
+TRUNCATE TABLE TMP_SUBCLASS;
+
+INSERT INTO TMP_SUBCLASS (
+    SUBCLASS_ID,
+    SUBCLASS_NM,
+    CLASS_ID,
+    CLASS_NM,
+    DEPT_ID,
+    DEPT_NM,
+    INGEST_DT
+)
+SELECT DISTINCT
+    SUBCLASS_ID,
+    SUBCLASS_NM,
+    CLASS_ID,
+    CLASS_NM,
+    DEPT_ID,
+    DEPT_NM,
+    INGEST_DT
+FROM TMP_ITEM
+WHERE SUBCLASS_ID IS NOT NULL;
